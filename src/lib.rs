@@ -1,8 +1,22 @@
 extern crate getopts;
-use getopts::{optflag,getopts,OptGroup,usage};
+use getopts::{Options,Matches};
 use std::os;
 
-pub fn print_usage(program: &str, opts: &[OptGroup]) {
+mod listener;
+
+pub fn print_usage(program: &str, opts: Options) {
     let brief = format!("Usage: {} [options]", program);
-    print!("{}", usage(brief.as_slice(), opts));
+    print!("{}", opts.usage(brief.as_slice()));
+}
+
+pub fn nc(matches: &Matches) {
+    if matches.opt_present("l") {
+        listener::listen(matches);
+    }
+    else {
+        connect(matches);
+    }
+}
+
+fn connect(matches: &Matches) {
 }
