@@ -1,0 +1,5 @@
+[package]
+
+name = "rust-nc"
+version = "0.0.1"
+authors = ["Luke Rodgers <lukeasrodgers@gmail.com>"]
