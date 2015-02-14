@@ -3,6 +3,7 @@ use getopts::{Options,Matches};
 use std::os;
 
 mod listener;
+mod connecter;
 
 pub fn print_usage(program: &str, opts: Options) {
     let brief = format!("Usage: {} [options]", program);
@@ -19,4 +20,7 @@ pub fn nc(matches: &Matches) {
 }
 
 fn connect(matches: &Matches) {
+    if matches.free.len() >= 2 {
+        connecter::connect(matches);
+    }
 }
