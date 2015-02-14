@@ -1,6 +1,5 @@
 use getopts::{Options,Matches};
 use std::net::{TcpListener,TcpStream};
-use std::thread::Thread;
 use std::io::{Read,BufStream,BufRead};
 use std::old_io::{LineBufferedWriter,stdio};
 
