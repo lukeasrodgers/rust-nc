@@ -10,8 +10,7 @@ pub fn listen(matches: &Matches) {
     let listener = TcpListener::bind(s.as_slice()).unwrap();
     // block until we get connection
     match listener.accept() {
-        Ok(res) => {
-            let (stream, socket_addr) = res;
+        Ok((stream, socket_addr)) => {
             // nc doesn't handle multiple connections, so no need to do `handle_client`
             // in thread.
             handle_client(stream);
