@@ -13,8 +13,7 @@ pub fn connect(matches: &Matches) {
     };
     match TcpStream::connect(&(host.as_slice(), port)) {
         Ok(stream) => {
-            write_to_stream(&stream);
-            println!("ok");
+            readwrite(&stream);
         },
         Err(f) => {
             // just exit
@@ -22,11 +21,27 @@ pub fn connect(matches: &Matches) {
     }
 }
 
-fn write_to_stream(stream: &TcpStream) {
+fn readwrite(stream: &TcpStream) {
     let mut buf_stream = BufStream::new(stream);
-    let mut stdin = old_io::stdin();
-    for line in stdin.lock().lines() {
-        buf_stream.write_all(line.unwrap().as_bytes()).unwrap();
-        buf_stream.flush();
+    let mut stdin_reader = old_io::stdin();
+    let mut read_buf = [0, 4096];
+    loop {
+        match stream.peer_addr() {
+            Ok(addr) => { /* */ },
+            Err(f) => {
+                // Hack for when other end closes socket, will exit.
+                return;
+            }
+        }
+        // Have to block here, so we can't responsively terminate if server closes socket.
+        match stdin_reader.read(&mut read_buf) {
+            Ok(n) => {
+                buf_stream.write_all(&read_buf).unwrap();
+                buf_stream.flush(); // overkill, probably
+            },
+            Err(f) => {
+                panic!(f.to_string());
+            }
+        }
     }
 }
