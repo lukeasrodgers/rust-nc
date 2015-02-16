@@ -1,7 +1,7 @@
 extern crate getopts;
 extern crate "rust-nc" as rustnc;
 
-use getopts::{Options,Matches};
+use getopts::{Options};
 use std::os;
 
 use rustnc::{print_usage,nc};
