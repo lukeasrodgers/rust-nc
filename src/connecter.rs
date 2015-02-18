@@ -26,18 +26,17 @@ fn readwrite(stream: &TcpStream) {
     let mut stdin_reader = old_io::stdin();
     let mut read_buf = [0, 4096];
     loop {
-        match stream.peer_addr() {
-            Ok(addr) => { /* */ },
-            Err(f) => {
-                // Hack for when other end closes socket, will exit.
-                return;
-            }
-        }
-        // Have to block here, so we can't responsively terminate if server closes socket.
+        // Have to block here, so we can't immediately terminate if server closes socket.
         match stdin_reader.read(&mut read_buf) {
             Ok(n) => {
                 buf_stream.write_all(&read_buf.slice_to(n)).unwrap();
-                buf_stream.flush(); // overkill, probably
+                match buf_stream.flush() {
+                    Ok(_) => { /* */ },
+                    Err(f) => {
+                        // other end closed socket
+                        return;
+                    }
+                }
             },
             Err(f) => {
                 panic!(f.to_string());
