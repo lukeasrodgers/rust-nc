@@ -9,11 +9,12 @@ pub fn listen(matches: &Matches) {
     s.push_str(matches.free[0].as_slice());
     let listener = TcpListener::bind(s.as_slice()).unwrap();
     // block until we get connection
+    let mut writer = LineBufferedWriter::new(stdio::stdout());
     match listener.accept() {
         Ok((stream, socket_addr)) => {
             // nc doesn't handle multiple connections, so no need to do `handle_client`
             // in thread.
-            handle_client(stream);
+            handle_client(stream, &mut writer);
         },
         Err(f) => {
             panic!(f.to_string());
@@ -21,15 +22,14 @@ pub fn listen(matches: &Matches) {
     }
 }
 
-fn handle_client(stream: TcpStream) {
+fn handle_client(stream: TcpStream, writer: &mut Writer) {
     let mut buf_stream = BufStream::new(stream);
     let mut read_buf = [0; 4096];
-    let mut writer = LineBufferedWriter::new(stdio::stdout());
     loop {
         match(buf_stream.read(&mut read_buf)) {
             Ok(n) => {
                 if n > 0 {
-                    writer.write_all(&read_buf);
+                    writer.write_all(&read_buf.slice_to(n)).unwrap();
                 }
                 else {
                     return;
