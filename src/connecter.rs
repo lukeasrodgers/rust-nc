@@ -36,7 +36,7 @@ fn readwrite(stream: &TcpStream) {
         // Have to block here, so we can't responsively terminate if server closes socket.
         match stdin_reader.read(&mut read_buf) {
             Ok(n) => {
-                buf_stream.write_all(&read_buf).unwrap();
+                buf_stream.write_all(&read_buf.slice_to(n)).unwrap();
                 buf_stream.flush(); // overkill, probably
             },
             Err(f) => {
