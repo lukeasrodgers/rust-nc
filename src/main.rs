@@ -1,7 +1,7 @@
 extern crate getopts;
 extern crate "rust-nc" as rustnc;
 
-use getopts::{Options};
+use getopts::Options;
 use std::os;
 
 use rustnc::{print_usage,nc};
@@ -22,7 +22,7 @@ fn main() {
         }
     };
     if matches.opt_present("h") {
-        print_usage(program.as_slice(), opts);
+        print_usage(&program, opts);
         return;
     }
 
