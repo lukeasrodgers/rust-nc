@@ -6,3 +6,6 @@ authors = ["Luke Rodgers <lukeasrodgers@gmail.com>"]
 
 [dependencies]
 getopts = "0.2.4"
+
+[dependencies.mio]
+git = "https://github.com/carllerche/mio"
