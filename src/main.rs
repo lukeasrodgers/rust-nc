@@ -1,5 +1,6 @@
 extern crate getopts;
 extern crate "rust-nc" as rustnc;
+extern crate mio;
 
 use getopts::Options;
 use std::os;
