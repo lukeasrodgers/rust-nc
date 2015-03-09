@@ -4,6 +4,7 @@ use std::os;
 
 mod listener;
 mod connecter;
+mod util;
 
 pub fn print_usage(program: &str, opts: Options) {
     let brief = format!("Usage: {} [options]", program);

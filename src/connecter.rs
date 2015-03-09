@@ -8,10 +8,10 @@ use self::mio::*;
 use self::mio::net::tcp::*;
 use self::mio::buf::{ByteBuf};
 use self::mio::net::*;
-use std::str::FromStr;
-use std::net::ToSocketAddrs;
 
 use std::thread;
+
+use super::util::parse_addr;
 
 const CLIENT: Token = Token(1);
 
@@ -106,12 +106,4 @@ fn readwrite_chan(channel: &EventLoopSender<String>) {
             }
         }
     }
-}
-
-// pretty ugly...
-fn parse_addr(matches: &Matches) -> SocketAddr {
-    let host = matches.free.get(0).unwrap();
-    let port_string = matches.free.get(1).unwrap();
-    let port: u16 = FromStr::from_str(port_string.as_slice()).unwrap();
-    return (host.as_slice(), port).to_socket_addrs().unwrap().next().unwrap();
 }
