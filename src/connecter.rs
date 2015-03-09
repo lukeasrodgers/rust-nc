@@ -42,9 +42,9 @@ impl Handler for ClientHandler {
                         print!("{}", String::from_utf8(sl.to_vec()).unwrap());
                     }
                     Err(e) => {
-                        panic!(e);
-                        // println!("Client closed connection, shutting down.");
-                        // event_loop.shutdown();
+                        // Probably because connection could not be established.
+                        event_loop.shutdown();
+                        panic!(e.to_string());
                     }
                 }
             },
@@ -57,7 +57,6 @@ impl Handler for ClientHandler {
 
 pub fn nc_connect(matches: &Matches) {
     let addr = parse_addr(matches);
-    println!("addr: {}", addr);
     let sock = match addr.ip() {
         IpAddr::V4(..) => v4(),
         IpAddr::V6(..) => v6()
