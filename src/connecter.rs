@@ -90,12 +90,10 @@ pub fn nc_connect(matches: &Matches) {
 fn readwrite_chan(channel: &EventLoopSender<String>) {
     let mut stdin_reader = old_io::stdin();
     let mut read_buf = [0; 4096];
-    println!("readwritechan");
     loop {
         // Have to block here, so we can't immediately terminate if server closes socket.
         match stdin_reader.read(&mut read_buf) {
             Ok(n) => {
-                println!("read");
                 let read = read_buf.slice_to(n);
                 let byte_vec: Vec<u8> = read.to_vec();
                 let message = String::from_utf8(byte_vec).unwrap();
