@@ -11,6 +11,8 @@ use self::mio::net::*;
 use std::str::FromStr;
 use std::net::ToSocketAddrs;
 
+use std::thread;
+
 const CLIENT: Token = Token(1);
 
 struct ClientHandler {
@@ -19,7 +21,7 @@ struct ClientHandler {
 
 impl Handler for ClientHandler {
     type Timeout = usize;
-    type Message = ();
+    type Message = String;
 
     fn readable(&mut self, event_loop: &mut EventLoop<ClientHandler>, token: Token, _: ReadHint) {
         match token {
@@ -53,6 +55,21 @@ impl Handler for ClientHandler {
             }
         }
     }
+
+    fn writable(&mut self, event_loop: &mut EventLoop<ClientHandler>, token: Token) {
+        match token {
+            CLIENT => {
+                println!("should write");
+            },
+            _ => {
+                panic!("unepxected token!".to_string());
+            }
+        }
+    }
+
+    fn notify(&mut self, event_loop: &mut EventLoop<ClientHandler>, msg: String) {
+        println!("got message: {}", msg);
+    }
 }
 
 pub fn nc_connect(matches: &Matches) {
@@ -68,11 +85,36 @@ pub fn nc_connect(matches: &Matches) {
         Ok((stream, _)) => {
             let mut client = ClientHandler { sock: stream };
             event_loop.register(&client.sock, CLIENT).unwrap();
+            let sender = event_loop.channel();
+            thread::spawn(move || {
+                readwrite_chan(&sender);
+            });
             let _ = event_loop.run(&mut client);
         },
         Err(f) => {
             println!("exiting");
             // just exit
+        }
+    }
+}
+
+fn readwrite_chan(channel: &EventLoopSender<String>) {
+    let mut stdin_reader = old_io::stdin();
+    let mut read_buf = [0; 4096];
+    println!("readwritechan");
+    loop {
+        // Have to block here, so we can't immediately terminate if server closes socket.
+        match stdin_reader.read(&mut read_buf) {
+            Ok(n) => {
+                println!("read");
+                let read = read_buf.slice_to(n);
+                let byte_vec: Vec<u8> = read.to_vec();
+                let message = String::from_utf8(byte_vec).unwrap();
+                channel.send(message).unwrap();
+            },
+            Err(f) => {
+                panic!(f.to_string());
+            }
         }
     }
 }
