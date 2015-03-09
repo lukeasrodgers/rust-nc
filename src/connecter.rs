@@ -1,17 +1,20 @@
 extern crate mio;
 use getopts::{Options,Matches};
-use std::net::{TcpStream,SocketAddr};
+use std::net::{SocketAddr,lookup_host,IpAddr};
 use std::io::{BufStream,Write};
 use std::old_io;
 
 use self::mio::*;
-use self::mio::net::tcp::{TcpSocket, TcpListener};
+use self::mio::net::tcp::*;
 use self::mio::buf::{ByteBuf};
+use self::mio::net::*;
+use std::str::FromStr;
+use std::net::ToSocketAddrs;
 
 const CLIENT: Token = Token(1);
 
 struct ClientHandler {
-    sock: TcpSocket
+    sock: NonBlock<TcpStream>
 }
 
 impl Handler for ClientHandler {
@@ -39,13 +42,9 @@ impl Handler for ClientHandler {
                         print!("{}", String::from_utf8(sl.to_vec()).unwrap());
                     }
                     Err(e) => {
-                        if e.is_eof() {
-                            println!("Client closed connection, shutting down.");
-                            event_loop.shutdown();
-                        }
-                        else {
-                            panic!(e);
-                        }
+                        panic!(e);
+                        // println!("Client closed connection, shutting down.");
+                        // event_loop.shutdown();
                     }
                 }
             },
@@ -56,24 +55,24 @@ impl Handler for ClientHandler {
     }
 }
 
-pub fn connect(matches: &Matches) {
-    let host = matches.free.get(0).unwrap();
-    let port = matches.free.get(1).unwrap();
-    let mut addr = String::new();
-    addr.push_str(host.as_slice());
-    addr.push_str(":");
-    addr.push_str(port.as_slice());
-    let sock = TcpSocket::v4().unwrap();
+pub fn nc_connect(matches: &Matches) {
+    let addr = parse_addr(matches);
+    println!("addr: {}", addr);
+    let sock = match addr.ip() {
+        IpAddr::V4(..) => v4(),
+        IpAddr::V6(..) => v6()
+    }.unwrap();
 
     let mut event_loop = EventLoop::new().unwrap();
 
     match sock.connect(&addr) {
-        Ok(stream) => {
+        Ok((stream, _)) => {
             let mut client = ClientHandler { sock: stream };
             event_loop.register(&client.sock, CLIENT).unwrap();
             let _ = event_loop.run(&mut client);
         },
         Err(f) => {
+            println!("exiting");
             // just exit
         }
     }
@@ -91,6 +90,7 @@ fn readwrite(stream: &TcpStream) {
                 match buf_stream.flush() {
                     Ok(_) => { /* */ },
                     Err(f) => {
+                        println!("closed");
                         // other end closed socket
                         return;
                     }
@@ -101,4 +101,12 @@ fn readwrite(stream: &TcpStream) {
             }
         }
     }
+}
+
+// pretty ugly...
+fn parse_addr(matches: &Matches) -> SocketAddr {
+    let host = matches.free.get(0).unwrap();
+    let port_string = matches.free.get(1).unwrap();
+    let port: u16 = FromStr::from_str(port_string.as_slice()).unwrap();
+    return (host.as_slice(), port).to_socket_addrs().unwrap().next().unwrap();
 }

@@ -12,7 +12,7 @@ pub fn print_usage(program: &str, opts: Options) {
 
 pub fn nc(matches: &Matches) {
     if matches.opt_present("l") {
-        listener::listen(matches);
+        listener::nc_listen(matches);
     }
     else {
         connect(matches);
@@ -21,6 +21,6 @@ pub fn nc(matches: &Matches) {
 
 fn connect(matches: &Matches) {
     if matches.free.len() >= 2 {
-        connecter::connect(matches);
+        connecter::nc_connect(matches);
     }
 }

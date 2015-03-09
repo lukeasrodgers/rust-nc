@@ -3,7 +3,7 @@ use std::net::{TcpListener,TcpStream};
 use std::io::{Read,BufStream,BufRead};
 use std::old_io::{LineBufferedWriter,stdio};
 
-pub fn listen(matches: &Matches) {
+pub fn nc_listen(matches: &Matches) {
     // append port to localhost IP address
     let mut s = String::from_str("127.0.0.1:");
     s.push_str(matches.free[0].as_slice());
