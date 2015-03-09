@@ -56,19 +56,8 @@ impl Handler for ClientHandler {
         }
     }
 
-    fn writable(&mut self, event_loop: &mut EventLoop<ClientHandler>, token: Token) {
-        match token {
-            CLIENT => {
-                println!("should write");
-            },
-            _ => {
-                panic!("unepxected token!".to_string());
-            }
-        }
-    }
-
     fn notify(&mut self, event_loop: &mut EventLoop<ClientHandler>, msg: String) {
-        println!("got message: {}", msg);
+        self.sock.write_slice(msg.as_bytes()).unwrap();
     }
 }
 
