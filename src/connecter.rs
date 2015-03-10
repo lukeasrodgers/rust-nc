@@ -81,7 +81,7 @@ pub fn nc_connect(matches: &Matches) {
             let _ = event_loop.run(&mut client);
         },
         Err(f) => {
-            println!("exiting");
+            println!("exiting: {}", f.to_string());
             // just exit
         }
     }
