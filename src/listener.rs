@@ -34,7 +34,8 @@ impl ServerHandler {
                     Some(ref c) => {
                         event_loop.register(c, CLIENT);
                     },
-                    None => { panic!("no ref??".to_string());
+                    None => {
+                        panic!("no ref??".to_string());
                     }
                 }
             }
@@ -46,18 +47,24 @@ impl Handler for ServerHandler {
     type Timeout = usize;
     type Message = String;
 
-    fn readable(&mut self, event_loop: &mut EventLoop<ServerHandler>, token: Token, _: ReadHint) {
+    fn readable(&mut self, event_loop: &mut EventLoop<ServerHandler>, token: Token, hint: ReadHint) {
         match token {
             SERVER => {
                 // Call `accept` on our `tcp_handler`.
                 self.accept(event_loop);
             },
             CLIENT => {
+                if hint.is_hup() {
+                    event_loop.shutdown();
+                }
                 let mut read_buf = ByteBuf::mut_with_capacity(2048);
                 match self.conn {
                     Some(ref mut c) => {
                         match c.read(&mut read_buf) {
-                            Ok(n) => {
+                            Ok(None) => {
+                                println!("none read");
+                            },
+                            Ok(Some(n)) => {
                                 // `_` would be the number of bytes read.
                                 // `flip` will return a `ByteBuf` on which we can call
                                 // `read_slice` to get the data available to be read.
@@ -97,6 +104,15 @@ impl Handler for ServerHandler {
             }
         }
     }
+
+    fn timeout(&mut self, event_loop: &mut EventLoop<ServerHandler>, timeout: usize) {
+        println!("timeout");
+    }
+
+    fn interrupted(&mut self, event_loop: &mut EventLoop<ServerHandler>) {
+        println!("interupt");
+    }
+
 }
 
 pub fn nc_listen(matches: &Matches) {
@@ -105,13 +121,12 @@ pub fn nc_listen(matches: &Matches) {
     s.push_str(matches.free[0].as_slice());
     let addr: SocketAddr = FromStr::from_str(s.as_slice()).unwrap();
 
-    println!("addr: {}", addr);
     let listener = v4().unwrap();
-    listener.bind(&addr).unwrap();
-    let listener = listener.listen(1).unwrap();
+    listener.bind(&addr).ok().expect("Failed to bind to port");
+    let listener = listener.listen(1).ok().expect("Failed to listen on port");
 
     let mut event_loop = EventLoop::new().unwrap();
-    event_loop.register(&listener, SERVER).unwrap();
+    event_loop.register_opt(&listener, SERVER, Interest::readable() | Interest::hup() | Interest::error(), PollOpt::level()).unwrap();
 
     let mut server_handler = ServerHandler {
         conn: None,
@@ -130,7 +145,6 @@ fn readwrite_chan(channel: &EventLoopSender<String>) {
     let mut stdin_reader = old_io::stdin();
     let mut read_buf = [0; 4096];
     loop {
-        // Have to block here, so we can't immediately terminate if server closes socket.
         match stdin_reader.read(&mut read_buf) {
             Ok(n) => {
                 let read = read_buf.slice_to(n);

@@ -23,16 +23,19 @@ impl Handler for ClientHandler {
     type Timeout = usize;
     type Message = String;
 
-    fn readable(&mut self, event_loop: &mut EventLoop<ClientHandler>, token: Token, _: ReadHint) {
+    fn readable(&mut self, event_loop: &mut EventLoop<ClientHandler>, token: Token, hint: ReadHint) {
         match token {
             CLIENT => {
+                if hint.is_hup() {
+                    event_loop.shutdown();
+                }
                 let mut read_buf = ByteBuf::mut_with_capacity(2048);
                 match self.sock.read(&mut read_buf) {
                     Ok(None) => {
                         panic!("Read operation would block, bailing cuz this shouldn't happen.");
                     }
                     Ok(Some(r)) => {
-                        // `_` would be the number of bytes read.
+                        // `r` is the number of bytes read.
                         // `flip` will return a `ByteBuf` on which we can call
                         // `read_slice` to get the data available to be read.
                         // See http://carllerche.github.io/bytes/bytes/struct.ByteBuf.html
@@ -73,7 +76,7 @@ pub fn nc_connect(matches: &Matches) {
     match sock.connect(&addr) {
         Ok((stream, _)) => {
             let mut client = ClientHandler { sock: stream };
-            event_loop.register(&client.sock, CLIENT).unwrap();
+            event_loop.register_opt(&client.sock, CLIENT, Interest::readable() | Interest::hup() | Interest::error(), PollOpt::level()).unwrap();
             let sender = event_loop.channel();
             thread::spawn(move || {
                 readwrite_chan(&sender);
@@ -81,8 +84,7 @@ pub fn nc_connect(matches: &Matches) {
             let _ = event_loop.run(&mut client);
         },
         Err(f) => {
-            println!("exiting: {}", f.to_string());
-            // just exit
+            // Could not connect, so just exit.
         }
     }
 }
