@@ -1,7 +1,6 @@
 extern crate mio;
 use getopts::{Options,Matches};
 use std::net::{SocketAddr,lookup_host,IpAddr};
-use std::io::{BufStream,Write};
 use std::old_io;
 
 use self::mio::*;

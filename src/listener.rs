@@ -1,6 +1,5 @@
 extern crate mio;
 use getopts::{Options,Matches};
-use std::io::{Read,BufStream,BufRead};
 use std::old_io;
 
 use self::mio::*;
