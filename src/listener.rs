@@ -103,15 +103,6 @@ impl Handler for ServerHandler {
             }
         }
     }
-
-    fn timeout(&mut self, event_loop: &mut EventLoop<ServerHandler>, timeout: usize) {
-        println!("timeout");
-    }
-
-    fn interrupted(&mut self, event_loop: &mut EventLoop<ServerHandler>) {
-        println!("interupt");
-    }
-
 }
 
 pub fn nc_listen(matches: &Matches) {
