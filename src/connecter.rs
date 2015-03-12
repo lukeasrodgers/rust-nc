@@ -32,7 +32,7 @@ impl Handler for ClientHandler {
                 let mut read_buf = ByteBuf::mut_with_capacity(2048);
                 match self.sock.read(&mut read_buf) {
                     Ok(None) => {
-                        panic!("Read operation would block, bailing cuz this shouldn't happen.");
+                        panic!("Got read event, but nothing to read??");
                     }
                     Ok(Some(r)) => {
                         // `r` is the number of bytes read.

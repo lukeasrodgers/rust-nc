@@ -62,7 +62,7 @@ impl Handler for ServerHandler {
                     Some(ref mut c) => {
                         match c.read(&mut read_buf) {
                             Ok(None) => {
-                                println!("none read");
+                                panic!("Got read event, but nothing to read??");
                             },
                             Ok(Some(n)) => {
                                 // `_` would be the number of bytes read.
